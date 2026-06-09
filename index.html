@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="MGC Quiz"/>
+<meta name="theme-color" content="#f8f9fb"/>
+<title>Mission Golf Cars Sales Pro — Product Knowledge Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        display: ['Syne', 'sans-serif'],
+      },
+      colors: {
+        turf: { 50:'#f0faf4', 100:'#d6f4e2', 200:'#aee8c5', 300:'#76d4a0', 400:'#3dba77', 500:'#1e9e5a', 600:'#167e47', 700:'#10623a', 800:'#0c4d2e', 900:'#083d25' },
+        slate: { 50:'#f8f9fb', 100:'#f0f2f5', 200:'#e2e6ed', 300:'#c8cfd9', 400:'#9aa4b2', 500:'#6b7686', 600:'#4e5a69', 700:'#374151', 800:'#1f2937', 900:'#111827' },
+      },
+      keyframes: {
+        'slide-up': { '0%':{ opacity:'0', transform:'translateY(12px)' }, '100%':{ opacity:'1', transform:'translateY(0)' } },
+        'pop':       { '0%':{ transform:'scale(1)' }, '50%':{ transform:'scale(0.97)' }, '100%':{ transform:'scale(1)' } },
+        'shake':     { '0%,100%':{ transform:'translateX(0)' }, '20%':{ transform:'translateX(-4px)' }, '40%':{ transform:'translateX(4px)' }, '60%':{ transform:'translateX(-4px)' }, '80%':{ transform:'translateX(4px)' } },
+        'fade-in':   { '0%':{ opacity:'0' }, '100%':{ opacity:'1' } },
+        'score-up':  { '0%':{ opacity:'0', transform:'scale(0.8) translateY(8px)' }, '100%':{ opacity:'1', transform:'scale(1) translateY(0)' } },
+      },
+      animation: {
+        'slide-up': 'slide-up 0.28s ease-out both',
+        'pop':      'pop 0.18s ease-out',
+        'shake':    'shake 0.35s ease-out',
+        'fade-in':  'fade-in 0.25s ease-out both',
+        'score-up': 'score-up 0.5s cubic-bezier(.34,1.56,.64,1) both',
+      },
+    }
+  }
+}
+</script>
+<style>
+  body { background: #f8f9fb; -webkit-text-size-adjust: 100%; }
+
+  /* Remove iOS tap flash on buttons */
+  button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
+
+  /* Prevent iOS from zooming into inputs on focus (no inputs here, but defensive) */
+  input, select, textarea { font-size: 16px; }
+
+  .progress-bar { transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+
+  .opt-btn {
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s;
+    /* Minimum 48px touch target on mobile */
+    min-height: 48px;
+    /* Prevent text from being too small on mobile */
+    font-size: 15px;
+  }
+  .opt-btn:active:not(:disabled) { transform: scale(0.985); }
+
+  .feedback-box { animation: slide-up 0.22s ease-out both; }
+  .q-wrap { animation: slide-up 0.28s ease-out both; }
+  .results-wrap { animation: score-up 0.45s cubic-bezier(.34,1.56,.64,1) both; }
+  .brand-pill { letter-spacing: 0.02em; }
+
+  /* Larger "Next" button on mobile for easy thumb reach */
+  #next-btn {
+    min-height: 48px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Safe area insets for iPhone notch / home indicator */
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Hide the Enter-key hint on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    #enter-hint { display: none !important; }
+    #next-btn .enter-label { display: none !important; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Slightly tighter padding on small screens */
+  @media (max-width: 400px) {
+    .quiz-px { padding-left: 1rem; padding-right: 1rem; }
+    header { padding-left: 1rem; padding-right: 1rem; }
+  }
+</style>
+</head>
+<body class="font-sans min-h-screen flex flex-col items-center justify-start py-6 sm:py-10 px-3 sm:px-4">
+
+<!-- Header -->
+<header class="w-full max-w-2xl mb-5 sm:mb-8 px-1">
+  <div class="flex items-center gap-3 mb-1">
+    <span class="text-xs font-semibold tracking-widest text-turf-600 uppercase">Sales Training</span>
+  </div>
+  <h1 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">Mission Golf Cars Product Quiz</h1>
+  <p class="text-sm text-slate-500 mt-1">Club Car · Denago EV · E-Z-GO &mdash; specs, pricing, rentals &amp; accessories</p>
+</header>
+
+<!-- Card -->
+<main class="w-full max-w-2xl bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+  <!-- Progress strip -->
+  <div class="h-1.5 bg-slate-100 w-full">
+    <div id="progress-bar" class="progress-bar h-1.5 bg-turf-500 w-0"></div>
+  </div>
+
+  <!-- Progress label + score -->
+  <div class="flex items-center justify-between px-4 sm:px-6 pt-3 pb-3 border-b border-slate-100">
+    <div id="q-counter" class="text-xs font-semibold text-slate-400 tracking-wide">Question 1 of 75</div>
+    <div id="score-display" class="text-xs font-semibold text-slate-500">Score: <span id="score-num" class="text-turf-600">0</span></div>
+  </div>
+
+  <!-- Quiz body -->
+  <div id="quiz-body" class="px-4 sm:px-6 py-5 sm:py-6 quiz-px"></div>
+
+</main>
+
+<!-- Enter key hint (hidden automatically on touch devices via CSS) -->
+<p id="enter-hint" class="mt-4 text-xs text-slate-400 text-center">Press <kbd class="bg-slate-200 text-slate-600 rounded px-1.5 py-0.5 font-mono text-xs">Enter</kbd> to advance after answering</p>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const ALL = [
+  // ── CLUB CAR ──
+  {b:"Club Car",cat:"Seating",q:"How many passengers does the Club Car Onward 4 Passenger (2+2) seat, and what does '2+2' describe?",o:["2 passengers in front-facing seats only","4 passengers in a 2-front, 2-rear facing configuration","4 passengers all facing forward","6 passengers with an extended rear bench"],a:1,x:"The '2+2' layout means a front-facing driver row plus a rear-facing second row — great for family neighborhood rides. It seats 4 total."},
+  {b:"Club Car",cat:"Powertrain",q:"Which powertrain options are available for the Club Car Onward 4 Passenger?",o:["Gas only","Electric (lead acid) only","Gas, flooded lead acid electric, or lithium-ion electric","Diesel and gas only"],a:2,x:"Club Car offers three powertrain choices: gas, flooded lead acid (FLA) electric, and lithium-ion electric. Lithium unlocks extra features like the 7\" screen and wireless charging."},
+  {b:"Club Car",cat:"Pricing",q:"What is the starting MSRP for a non-lifted Club Car Onward 4 Passenger?",o:["$8,999","$11,299","$14,299","$15,799"],a:1,x:"The non-lifted Onward 4 Passenger starts at $11,299 MSRP. The lifted version is $11,699, and the LSV starts at $14,299."},
+  {b:"Club Car",cat:"Add-ons",q:"Which premium feature is EXCLUSIVE to lithium-ion powered Club Car Onward models?",o:["LED headlights","7\" digital display screen and dual wireless charging pads","Canopy top","Locking glove box"],a:1,x:"The 7\" touchscreen and wireless charging pads are lithium-only. They display speed, charge level, and battery data."},
+  {b:"Club Car",cat:"Specs",q:"What is the top speed of the Club Car Onward 4 Passenger standard model?",o:["15 mph","19 mph","25 mph","30 mph"],a:1,x:"Standard Onward models top out at 19 mph. The LSV version reaches 25 mph and is street-legal, starting at $14,299."},
+  {b:"Club Car",cat:"Add-ons",q:"What suspension system do lifted Club Car Onward models use?",o:["Standard coil-over shocks","SportDrive™ suspension with rack and pinion steering","Leaf spring suspension","Air suspension"],a:1,x:"Lifted Onward models use Club Car's SportDrive™ suspension with rack and pinion steering for enhanced off-road stability. All lifted models include fender flares and brush guards."},
+  {b:"Club Car",cat:"Add-ons",q:"Which accessory comes standard on ALL premium Onward packages (Matte Blue Onyx, Matte Graphite, Metallic Black)?",o:["Tire pressure monitoring system","Soundbar with dual subwoofers and Bluetooth","Homelink garage opener","Rear locking trunk"],a:1,x:"The Onward Premium Soundbar — dual subwoofers, Bluetooth, 100W Class D amp, aluminum drivers — is standard on all premium color packages."},
+  {b:"Club Car",cat:"Pricing",q:"What is the starting MSRP for the Club Car Onward 6 Passenger?",o:["$12,999","$13,999","$15,799","$17,299"],a:2,x:"The Club Car Onward 6 Passenger starts at $15,799 MSRP."},
+  {b:"Club Car",cat:"Specs",q:"What is the top speed of the Club Car Onward LSV (Low Speed Vehicle)?",o:["19 mph","22 mph","25 mph","30 mph"],a:2,x:"The Onward LSV is rated for 25 mph, making it federally classified as a Low Speed Vehicle — legal on roads posted 35 mph or less with required safety equipment."},
+  {b:"Club Car",cat:"Pricing",q:"The Club Car Onward lifted model starts at how much more than the non-lifted version?",o:["$200 more","$400 more","$500 more","Same price"],a:1,x:"The lifted Onward starts at $11,699 vs. the non-lifted at $11,299 — just $400 more from the factory. An aftermarket 6\" lift kit adds $400, making the factory lift the better value."},
+  {b:"Club Car",cat:"Add-ons",q:"What does Club Car Connect cost as an accessory?",o:["$749","$999","$1,249","$1,749"],a:3,x:"Club Car Connect is $1,749 — a premium GPS/telematics system and one of the highest-priced single accessories on the price list."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car Premium Sound Bar cost as a standalone add-on?",o:["$450","$600","$782","$1,000"],a:2,x:"The Club Car Premium Sound Bar is $782 as a standalone add-on. Premium color packages include it as standard."},
+  {b:"Club Car",cat:"Add-ons",q:"How much does a Club Car locking glove box add-on cost?",o:["$135","$251","$295","$338"],a:3,x:"A Club Car locking glove box is $338 — good for customers who want storage security but chose a non-premium trim."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car garage door opener (Homelink) cost?",o:["$135","$200","$251","$295"],a:2,x:"The Club Car garage door opener is $251 — popular for neighborhood and community residents who want seamless driveway cart access."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car rear locking trunk cost?",o:["$200","$251","$295","$338"],a:2,x:"The Club Car rear locking trunk is $295 — a great upsell for security-conscious customers in resort or community settings."},
+  {b:"Club Car",cat:"Add-ons",q:"What do Club Car running boards cost?",o:["$200","$295","$349","$377"],a:2,x:"Club Car running boards are $349 — popular for 4+ passenger carts to make boarding easier, especially on lifted models."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car brush guard cost?",o:["$295","$377","$420","$455"],a:3,x:"The Club Car brush guard is $455. Paired with fender flares ($377), that's $832 for a fully rugged lifted appearance package."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car 116\" canopy cost?",o:["$400","$550","$650","$700"],a:3,x:"The Club Car 116\" canopy is $700. E-Z-GO's 116\" is $550 — Club Car canopies run $150–$200 more at every tier."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car DOT-approved windshield cost?",o:["$287","$306","$400","$456"],a:3,x:"The Club Car DOT windshield is $456 — street-legal grade and the most expensive windshield on the price list. E-Z-GO does not offer a DOT windshield."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car clear windshield cost?",o:["$159","$287","$306","$456"],a:1,x:"Club Car clear windshields are $287. Tinted is $306. The DOT-approved version is $456. Compare to E-Z-GO clear at $159."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car 4-passenger rain enclosure cost?",o:["$623","$750","$922","$1,210"],a:2,x:"Club Car 4-passenger rain protection is $922 — $172 more than E-Z-GO's $750 option. The Club Car 2-pass enclosure starts at $623."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car standard canopy cost?",o:["$0","$200","$400","$500"],a:2,x:"Unlike E-Z-GO, a Club Car standard canopy costs $400. The 80\" upgrade is $500 and the 116\" is $700."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car rear cup holder add-on cost?",o:["$29","$39","$49","$59"],a:2,x:"Club Car rear cup holders are $49 — one of the most affordable add-ons and an easy upsell for any social-use buyer."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car storage compartment add-on cost?",o:["$49","$71","$89","$135"],a:1,x:"The Club Car storage compartment is $71 — affordable and practical for everyday users."},
+  {b:"Club Car",cat:"Add-ons",q:"What does a Club Car canopy grab handle set cost?",o:["$49","$67","$89","$135"],a:1,x:"Club Car canopy grab handles are $67 — a practical add-on for passenger safety, especially on lifted carts in off-road use."},
+
+  // ── DENAGO EV ──
+  {b:"Denago EV",cat:"Seating",q:"How many passengers does the Denago Rover XL6 seat, and what is its layout?",o:["2 passengers","4 passengers","6 passengers in a 4+2 layout","8 passengers"],a:2,x:"The Rover XL6 is Denago's 6-passenger cart in a 4+2 layout. Range is rated at 32 miles with a 992 lb load in Gear D."},
+  {b:"Denago EV",cat:"Powertrain",q:"What battery technology do ALL Denago EV models use?",o:["Lead-acid 48V","Gas with optional electric","LiFePO₄ lithium at 51.2V / 105Ah","Nickel-metal hydride"],a:2,x:"Every Denago EV uses a LiFePO₄ (lithium iron phosphate) battery at 51.2V / 105Ah — known for long cycle life, safety, and stability. Backed by an 8-year warranty."},
+  {b:"Denago EV",cat:"Specs",q:"What infotainment comes standard on Denago Rover XL and Nomad XL models?",o:["Basic AM/FM radio","10\" Android Auto screen only","Apple CarPlay and Android Auto","Bluetooth speaker only"],a:2,x:"Denago carts come standard with Apple CarPlay and Android Auto — a notable feature at their price point."},
+  {b:"Denago EV",cat:"Specs",q:"What is the Denago Rover XL's approximate range and charge time?",o:["20 miles / 2 hours","40+ miles / 5 hours","60 miles / 8 hours","25 miles / 3 hours"],a:1,x:"The Rover XL delivers 40+ miles per charge and refuels in about 5 hours. The Rover XL6 gets 32 miles with a full 992 lb load."},
+  {b:"Denago EV",cat:"Add-ons",q:"What warranty does Denago offer on its aluminum chassis?",o:["1-year limited","5-year warranty","8-year warranty","Lifetime warranty"],a:3,x:"Denago offers a LIFETIME warranty on the aluminum chassis, 8 years on the LiFePO₄ battery, and 2 years on other major parts."},
+  {b:"Denago EV",cat:"Seating",q:"The Denago Nomad XL is best described as which type of cart?",o:["A 6-passenger flat-terrain cart","A 2-passenger urban commuter","A 4-passenger lifted off-road capable cart in a 2+2 layout","A utility/work cart with a cargo bed"],a:2,x:"The Nomad XL is a 4-passenger lifted cart in a 2+2 layout designed for off-road use. It shares the same motor and battery as the Rover XL."},
+  {b:"Denago EV",cat:"Powertrain",q:"Denago EV is unique among your three brands because it only offers which power option?",o:["Gas only","Electric only — no gas models","Both gas and electric","Diesel only"],a:1,x:"Denago EV is 100% electric. Every Denago sale goes to an electric-minded buyer — a key qualification question upfront."},
+  {b:"Denago EV",cat:"Specs",q:"What motor does the Denago Rover XL use?",o:["A 3kW brushed DC motor","A 5kW AC induction motor","A brushless 5kW AC motor","A 48V gas-hybrid motor"],a:2,x:"The Rover XL uses a brushless 5kW AC motor — more efficient, lower maintenance, and quieter than brushed alternatives."},
+
+  // ── E-Z-GO ──
+  {b:"E-Z-GO",cat:"Seating",q:"Which E-Z-GO model is available in a 6-passenger configuration with both gas AND electric options?",o:["RXV 2","RXV 4","Express 6","Liberty"],a:2,x:"The E-Z-GO Express 6 seats 6 passengers and is available in both gas and electric powertrains, starting at $11,849."},
+  {b:"E-Z-GO",cat:"Powertrain",q:"What is E-Z-GO's branded lithium battery technology and who makes the cells?",o:["LiPower, made by LG","ELiTE Lithium, powered by Samsung SDI","PowerCore Lithium, made by Panasonic","SmartCell Lithium, proprietary"],a:1,x:"E-Z-GO's lithium system is called ELiTE Lithium, with cells from Samsung SDI. Key benefits: zero maintenance, fast charging, and consistent power."},
+  {b:"E-Z-GO",cat:"Pricing",q:"What is the starting MSRP for the E-Z-GO RXV 4 entry gas model (Valor S)?",o:["$7,999","$10,409","$12,999","$14,299"],a:1,x:"The RXV 4 Valor S starts at $10,409. ELiTE lithium Touring S is $11,799. Summit XTL is $15,599. Liberty LSV starts at $12,999."},
+  {b:"E-Z-GO",cat:"Add-ons",q:"What tech package is on the E-Z-GO RXV 4 Touring ST and Summit XT trims?",o:["A 5\" AM/FM display","A 10\" ECOXGEAR screen, 28\" soundbar, and rearview camera","A heads-up display","A smartphone mount only"],a:1,x:"Upper trims include a 10\" ECOXGEAR touchscreen with Bluetooth, a 28\" SoundExtreme Elite soundbar with lighting, and an integrated rearview backup camera."},
+  {b:"E-Z-GO",cat:"Seating",q:"What makes the E-Z-GO Liberty legally distinct from a standard RXV 4?",o:["It has a higher roof","It is an LSV (Low Speed Vehicle) rated for street use, starting at $12,999","It seats passengers in a 2+2 layout","It uses a diesel engine"],a:1,x:"The Liberty is E-Z-GO's street-legal LSV starting at $12,999. LSVs are federally regulated for on-road use up to 25 mph with required safety equipment."},
+  {b:"E-Z-GO",cat:"Add-ons",q:"What parking brake technology does E-Z-GO use across their RXV lineup?",o:["A standard hand-lever cable brake","IntelliBrake® automatic parking brake","A foot-actuated drum brake","No parking brake"],a:1,x:"E-Z-GO features IntelliBrake® — an automatic parking brake that engages when you stop without a manual lever. A key differentiator for E-Z-GO."},
+  {b:"E-Z-GO",cat:"Pricing",q:"What is the starting price for an E-Z-GO Certified Pre-Owned cart?",o:["$3,500","$5,995","$7,500","$9,000"],a:1,x:"E-Z-GO Certified Pre-Owned carts start at $5,995 — a great entry point for budget-conscious buyers who still want E-Z-GO quality."},
+  {b:"E-Z-GO",cat:"Specs",q:"What is the top speed of the E-Z-GO Liberty LSV?",o:["19 mph","22 mph","25 mph","30 mph"],a:2,x:"The Liberty LSV reaches 25 mph — required for Low Speed Vehicle classification. Standard E-Z-GO carts top out at 19 mph."},
+  {b:"E-Z-GO",cat:"Pricing",q:"How much does the E-Z-GO Express 6 start at?",o:["$9,849","$10,849","$11,849","$12,849"],a:2,x:"The E-Z-GO Express 6 starts at $11,849. It's available in gas or electric and seats 6 passengers."},
+  {b:"E-Z-GO",cat:"Add-ons",q:"What does a standard E-Z-GO canopy cost?",o:["$0 — included","$150","$350","$550"],a:0,x:"A standard E-Z-GO canopy is $0 — included with the cart. Upgrades are $350 for the 80\" and $550 for the 116\"."},
+  {b:"E-Z-GO",cat:"Add-ons",q:"What does an E-Z-GO tinted windshield cost?",o:["$99","$129","$159","$199"],a:2,x:"E-Z-GO tinted windshields are $159. Clear windshields are also $159 — same price for either. Club Car tinted is $306 by comparison."},
+  {b:"E-Z-GO",cat:"Add-ons",q:"What does an E-Z-GO 4-passenger rain enclosure cost?",o:["$550","$650","$750","$850"],a:2,x:"E-Z-GO 4-passenger rain protection is $750. Club Car's equivalent is $922 — always compare brand when a customer asks about enclosures."},
+  {b:"E-Z-GO",cat:"Add-ons",q:"What does an E-Z-GO side mirror add-on cost?",o:["$0","$25","$45","$75"],a:2,x:"E-Z-GO side mirrors are $45. The standard rearview mirror is $0 (included). Club Car side mirrors are $91."},
+
+  // ── RENTALS ──
+  {b:"Rentals",cat:"Rental Rate",q:"What is the daily rental rate for a 4-passenger golf cart?",o:["$100","$125","$150","$175"],a:2,x:"The 4-passenger daily rental is $150 at base MSRP pricing."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the weekend rental rate for a 4-passenger cart?",o:["$150","$200","$225","$250"],a:2,x:"The 4-passenger weekend rental is $225 — $75 less than two separate daily rentals ($300)."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the weekly rental rate for a 4-passenger cart?",o:["$225","$275","$300","$325"],a:3,x:"The 4-passenger weekly rental is $325 — the best per-day value for this cart size."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the monthly rental rate for a 4-passenger cart?",o:["$400","$450","$475","$500"],a:2,x:"The 4-passenger monthly rental is $475. Dramatically cheaper than 30 daily rentals ($4,500)."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the daily rental rate for a 6-passenger golf cart?",o:["$150","$175","$200","$225"],a:2,x:"The 6-passenger daily rental is $200 — $50 more per day than the 4-passenger rate."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the weekend rental rate for a 6-passenger cart?",o:["$225","$250","$275","$300"],a:2,x:"The 6-passenger weekend rental is $275 — $50 more than the 4-passenger weekend rate of $225."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the weekly rental rate for a 6-passenger cart?",o:["$325","$375","$400","$425"],a:3,x:"The 6-passenger weekly rental is $425 — $100 more per week than the 4-passenger weekly rate of $325."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the monthly rental rate for a 6-passenger cart?",o:["$550","$600","$625","$650"],a:3,x:"The 6-passenger monthly rental is $650 — $175 more per month than the 4-passenger monthly rate of $475."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the daily rental rate for a Utility Car?",o:["$100","$125","$150","$175"],a:2,x:"The Utility Car daily rental is $150 — identical to the 4-passenger daily rate."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the weekend rental rate for a Utility Car?",o:["$150","$175","$200","$225"],a:2,x:"The Utility Car weekend rental is $200 — $25 less than the 4-passenger weekend rate ($225)."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the weekly rental rate for a Utility Car?",o:["$275","$300","$325","$350"],a:2,x:"The Utility Car weekly rental is $325 — the same as the 4-passenger weekly rate."},
+  {b:"Rentals",cat:"Rental Rate",q:"What is the monthly rental rate for a Utility Car?",o:["$400","$450","$475","$500"],a:2,x:"The Utility Car monthly rental is $475 — the same as the 4-passenger monthly rate."},
+  {b:"Rentals",cat:"Scenario",q:"A customer needs a 6-passenger cart for 5 days. What is the most cost-effective rental option?",o:["Five daily rentals ($1,000 total)","One weekend rental ($275)","One weekly rental ($425)","One monthly rental ($650)"],a:2,x:"The weekly rate at $425 beats five daily rentals ($1,000 total). Always upsell to weekly for stays of 4+ days."},
+  {b:"Rentals",cat:"Scenario",q:"A customer needs a 4-passenger cart for 2 days. Which rental type saves them money?",o:["Two daily rentals ($300 total)","One weekend rental ($225)","One weekly rental ($325)","One monthly rental ($475)"],a:1,x:"The weekend rental at $225 saves $75 vs. two daily rentals ($300). Always recommend the weekend package for 2-day needs."},
+
+  // ── ACCESSORIES (shared / brand-agnostic) ──
+  {b:"Accessories",cat:"Add-ons",q:"What does a 6\" lift kit cost?",o:["$250","$300","$350","$400"],a:3,x:"A 6\" lift kit is $400. Club Car's factory lifted models include SportDrive™ suspension — often a better deal than aftermarket."},
+  {b:"Accessories",cat:"Add-ons",q:"What does the full light kit package cost (headlights, tail, brake, horn, blinkers)?",o:["$350","$450","$500","$550"],a:3,x:"The Full Light Package is $550. Options range from $125 (headlights & tail only) up to $550. Blinkers alone are $275."},
+  {b:"Accessories",cat:"Add-ons",q:"What does a custom paint job cost for a 2 or 4-passenger cart?",o:["$400","$600","$700","$900"],a:2,x:"Custom paint for a 2 or 4-passenger cart is $700. A 6-passenger custom paint is $1,000 due to larger surface area."},
+  {b:"Accessories",cat:"Add-ons",q:"What does Multi-Seal for all-terrain tires cost?",o:["$100","$150","$160","$200"],a:3,x:"Multi-Seal for all-terrain tires is $200. Standard tires are $160. A great upsell for lifted carts used off-road."},
+  {b:"Accessories",cat:"Add-ons",q:"What does a seat belt safety package cost?",o:["$75","$100","$125","$150"],a:3,x:"Seat belts are $150. An SMV sign is $30. Often required for LSV-classified carts."},
+  {b:"Accessories",cat:"Add-ons",q:"What do Lazy Life custom seats cost?",o:["$700","$750","$850","$950"],a:1,x:"Lazy Life custom seats are $750. El Tigre seats are $950 (premium), and Frank's are $700 (budget option)."},
+  {b:"Accessories",cat:"Add-ons",q:"What does a Yeti cooler rack cost?",o:["$199","$249","$269","$299"],a:2,x:"The Yeti cooler rack is $269. The Igloo rack is $289 — slightly more despite Igloo being the lower-cost brand."},
+  {b:"Accessories",cat:"Add-ons",q:"What does a floor-mounted gun rack cost?",o:["$75","$125","$175","$225"],a:1,x:"A floor-mounted gun rack is $125. A scabbards single option is $225. Popular in rural and outdoor communities."},
+  {b:"Accessories",cat:"Add-ons",q:"What does undercoating cost?",o:["$150","$200","$250","$300"],a:2,x:"Undercoating is $250. Powdercoating struts is $800 — a premium finish for a fully custom look."},
+  {b:"Accessories",cat:"Add-ons",q:"What does a unique key switch cost?",o:["$50","$65","$75","$95"],a:2,x:"A unique key switch is $75 — useful for communities or rental fleets where cart owners want differentiated keys."},
+  {b:"Accessories",cat:"Add-ons",q:"What does the M&M Golf Bag Attachment cost?",o:["$150","$275","$415","$650"],a:2,x:"The M&M Bag Attachment is $415. The Liberty Bag Rack is $650 and the GTW Bag Attachment is $150 — know these for golf-focused buyers."},
+
+  // ── ALL BRANDS / SCENARIOS ──
+  {b:"All Brands",cat:"Powertrain",q:"Which of the three brands does NOT offer a gas-powered option?",o:["Club Car","E-Z-GO","Denago EV","All three offer gas"],a:2,x:"Denago EV is electric-only. Both Club Car and E-Z-GO offer gas powertrains alongside their electric models."},
+  {b:"All Brands",cat:"Seating",q:"A customer needs to seat 6 people. Which models across all three brands work?",o:["Club Car Onward 6, Denago Rover XL6, E-Z-GO Express 6","Club Car Onward 4, Denago Nomad XL, E-Z-GO RXV 4","No brand offers a 6-passenger option","Only E-Z-GO offers a 6-passenger cart"],a:0,x:"All three brands have 6-passenger options: Club Car Onward 6 ($15,799), Denago Rover XL6 (32-mile range, 4+2), and E-Z-GO Express 6 (gas or electric, from $11,849)."},
+  {b:"All Brands",cat:"Add-ons",q:"Which brand offers Apple CarPlay/Android Auto as a standard feature on all models?",o:["Club Car (lithium models only)","E-Z-GO (top trims only)","Denago EV (standard across the lineup)","None of the brands offer this"],a:2,x:"Denago EV includes Apple CarPlay and Android Auto standard. E-Z-GO offers a 10\" screen only on upper trims. Club Car's 7\" screen is lithium-model exclusive."},
+  {b:"All Brands",cat:"Specs",q:"Which statement about lifted vs. non-lifted carts is correct?",o:["Non-lifted carts are better for off-road terrain","Lifted carts have higher ground clearance, larger tires, and handle uneven terrain better","Lifted carts are always electric-only","Lifting a cart reduces top speed below 10 mph"],a:1,x:"Lifted carts offer superior ground clearance and larger tires for uneven terrain. Non-lifted is better for flat pavement with a lower step-in height."},
+  {b:"All Brands",cat:"Scenario",q:"A customer says they want the lowest-maintenance electric cart with the best warranty. Which brand do you lead with?",o:["E-Z-GO — ELiTE Lithium cells","Club Car — lithium with 7\" screen","Denago EV — lifetime chassis, 8-year battery, LiFePO₄ chemistry","All three are identical on maintenance"],a:2,x:"Denago EV wins on warranty: lifetime aluminum chassis and 8-year battery. LiFePO₄ is among the safest and longest-lasting lithium chemistries."},
+  {b:"All Brands",cat:"Scenario",q:"A customer asks which brand gives the most technology standard without paying extra. Best answer?",o:["Club Car — the 7\" screen is on all models","E-Z-GO — IntelliBrake is always included","Denago EV — Apple CarPlay, Android Auto, and LiFePO₄ battery all standard","All three are identical on standard tech"],a:2,x:"Denago EV bundles the most tech standard: Apple CarPlay, Android Auto, LiFePO₄ battery with 8-year warranty, and lifetime chassis warranty — no trim upgrade needed."},
+  {b:"All Brands",cat:"Scenario",q:"A neighborhood buyer asks what the main difference is between an LSV and a standard golf cart. What do you say?",o:["An LSV is just a golf cart with a fancier name","An LSV is federally regulated, reaches 25 mph, and is street-legal on roads posted 35 mph or less with required safety features","An LSV is always gas powered","An LSV can reach 45 mph on highways"],a:1,x:"An LSV reaches 25 mph, requires seatbelts, mirrors, VIN, and DOT-approved lighting, and is legal on roads posted 35 mph or less. Club Car (Onward LSV) and E-Z-GO (Liberty) both offer LSV models."},
+  {b:"All Brands",cat:"Scenario",q:"A customer is choosing between a Club Car Onward gas and lithium-electric model. What are the two biggest reasons to go lithium?",o:["Lithium is cheaper and faster","Lithium unlocks the 7\" digital display and wireless charging, and has zero-maintenance battery","Lithium models have a higher top speed","Lithium models come in more colors"],a:1,x:"The two biggest lithium upsides on Club Car: (1) exclusive 7\" touchscreen with speed/battery display and dual wireless charging pads, and (2) zero-maintenance battery with no watering or acid checks."},
+  {b:"All Brands",cat:"Scenario",q:"How does soundbar pricing differ between E-Z-GO and Club Car?",o:["E-Z-GO soundbar is $782; Club Car is free","Club Car does not offer a Soundbar attachment","Mission charges the same for both brands at $782","Neither brand offers a soundbar add-on"],a:2,x:"Mission Golf Cars can add Premium Sound Bar to Club Car or EZ-GO Cars for $782 as a standalone add-on. Denago EV offers a SoundBar on all Standard Models."},
+  {b:"All Brands",cat:"Scenario",q:"A resort wants to know the daily pricing difference between 4-passenger and 6-passenger cart rentals. What is it?",o:["They cost the same","6-passenger is $25/day more","6-passenger is $50/day more","6-passenger is $100/day more"],a:2,x:"4-passenger daily is $150; 6-passenger daily is $200 — exactly $50 more. Use this when guests are deciding between sizes."},
+  {b:"All Brands",cat:"Scenario",q:"A customer is buying a Club Car for street use in their gated community. Which add-ons are most essential?",o:["Brush guard and fender flares","DOT windshield ($456), seat belts ($150), SMV sign ($30), and unique key switch ($75)","Sound bar and premium canopy","Gun racks and cooler rack"],a:1,x:"For community LSV street use: DOT windshield ($456), seat belts ($150), SMV sign ($30), and unique key switch ($75) — $711 in safety-related add-ons."},
+  {b:"All Brands",cat:"Scenario",q:"A customer buying a Club Car for off-road use asks what accessories to add. What's the best bundle?",o:["Sound bar and garage opener","Factory lift or 6\" kit + brush guard + fender flares + all-terrain tires with Multi-Seal","DOT windshield + seat belts + SMV sign","Rain enclosure + rear locking trunk"],a:1,x:"For off-road: factory lift (or $400 kit), brush guard ($455), fender flares ($377), and Multi-Seal for all-terrain tires ($200). Roughly $1,032–$1,432 depending on approach."},
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let deck = [], cur = 0, score = 0, answered = false;
+const tally = { "Club Car":[0,0], "Denago EV":[0,0], "E-Z-GO":[0,0], "Rentals":[0,0], "Accessories":[0,0], "All Brands":[0,0] };
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── BRAND COLORS ─────────────────────────────────────────────────────────────
+const brandMeta = {
+  "Club Car":   { bg:"bg-blue-50",   text:"text-blue-700",   border:"border-blue-200"  },
+  "Denago EV":  { bg:"bg-emerald-50",text:"text-emerald-700",border:"border-emerald-200"},
+  "E-Z-GO":     { bg:"bg-amber-50",  text:"text-amber-700",  border:"border-amber-200" },
+  "Rentals":    { bg:"bg-purple-50", text:"text-purple-700", border:"border-purple-200"},
+  "Accessories":{ bg:"bg-rose-50",   text:"text-rose-700",   border:"border-rose-200"  },
+  "All Brands": { bg:"bg-slate-100", text:"text-slate-600",  border:"border-slate-200" },
+};
+const catColor = {
+  "Seating":"bg-indigo-50 text-indigo-700",
+  "Powertrain":"bg-teal-50 text-teal-700",
+  "Pricing":"bg-amber-50 text-amber-700",
+  "Add-ons":"bg-rose-50 text-rose-700",
+  "Specs":"bg-sky-50 text-sky-700",
+  "Rental Rate":"bg-violet-50 text-violet-700",
+  "Scenario":"bg-orange-50 text-orange-700",
+};
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function init(reset = true) {
+  deck = shuffle(ALL);
+  cur = 0; score = 0; answered = false;
+  if (reset) Object.keys(tally).forEach(k => tally[k] = [0, 0]);
+  updateProgress();
+  render();
+}
+
+function updateProgress() {
+  const pct = deck.length ? Math.round((cur / deck.length) * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('q-counter').textContent = cur < deck.length
+    ? `Question ${cur + 1} of ${deck.length}`
+    : `Complete`;
+  document.getElementById('score-num').textContent = score;
+}
+
+function render() {
+  if (cur >= deck.length) { showResults(); return; }
+  const q = deck[cur];
+  const bm = brandMeta[q.b] || brandMeta["All Brands"];
+  const cc = catColor[q.cat] || "bg-slate-100 text-slate-600";
+
+  const opts = q.o.map((opt, i) => `
+    <button
+      id="opt-${i}"
+      onclick="choose(${i})"
+      class="opt-btn w-full text-left px-4 py-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-turf-400 focus:ring-offset-1"
+    >${opt}</button>
+  `).join('');
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div class="q-wrap">
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <span class="brand-pill inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${bm.bg} ${bm.text} ${bm.border}">${q.b}</span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${cc}">${q.cat}</span>
+      </div>
+      <p class="text-slate-900 text-base font-semibold leading-snug mb-5">${q.q}</p>
+      <div id="options-grid" class="flex flex-col gap-2.5">${opts}</div>
+      <div id="feedback" class="hidden feedback-box mt-4"></div>
+      <div class="mt-5">
+        <button
+          id="next-btn"
+          onclick="nextQ()"
+          class="hidden items-center gap-1.5 px-5 py-3 rounded-xl bg-turf-600 hover:bg-turf-700 active:bg-turf-800 text-white text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-turf-400"
+        >${cur === deck.length - 1 ? 'See results' : 'Next question'} <span class="enter-label opacity-70 text-xs">(Enter)</span></button>
+      </div>
+    </div>
+  `;
+  answered = false;
+  updateProgress();
+  // Scroll card into view on mobile when a new question loads
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function choose(idx) {
+  if (answered) return;
+  answered = true;
+  const q = deck[cur];
+  const isRight = idx === q.a;
+  const t = tally[q.b] || tally["All Brands"];
+  if (isRight) { score++; t[0]++; } else { t[1]++; }
+
+  document.getElementById('score-num').textContent = score;
+
+  // Style all buttons
+  q.o.forEach((_, i) => {
+    const btn = document.getElementById(`opt-${i}`);
+    btn.disabled = true;
+    if (i === q.a) {
+      btn.className = "opt-btn w-full text-left px-4 py-3.5 rounded-xl border text-sm font-semibold bg-turf-50 border-turf-400 text-turf-800 animate-pop";
+      btn.innerHTML = `<span class="inline-flex items-center gap-2"><span class="text-turf-500">✓</span>${q.o[i]}</span>`;
+    } else if (i === idx && !isRight) {
+      btn.className = "opt-btn w-full text-left px-4 py-3.5 rounded-xl border text-sm font-semibold bg-red-50 border-red-300 text-red-700 animate-shake";
+      btn.innerHTML = `<span class="inline-flex items-center gap-2"><span class="text-red-400">✗</span>${q.o[i]}</span>`;
+    } else {
+      btn.className = "opt-btn w-full text-left px-4 py-3.5 rounded-xl border text-sm font-medium bg-white border-slate-150 text-slate-400";
+    }
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback');
+  fb.className = isRight
+    ? 'feedback-box mt-4 p-4 rounded-xl bg-turf-50 border border-turf-200 text-turf-900 text-sm leading-relaxed'
+    : 'feedback-box mt-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-sm leading-relaxed';
+  fb.innerHTML = `<span class="font-semibold">${isRight ? 'Correct! ' : 'Not quite. '}</span>${q.x}`;
+  fb.classList.remove('hidden');
+
+  // Show next button
+  const nb = document.getElementById('next-btn');
+  nb.classList.remove('hidden');
+  nb.classList.add('flex');
+
+  // On mobile, scroll so the feedback + next button are visible
+  setTimeout(() => {
+    nb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 150);
+}
+
+function nextQ() {
+  cur++;
+  render();
+}
+
+// ─── ENTER KEY ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (!answered) return;
+  const nb = document.getElementById('next-btn');
+  if (nb && !nb.classList.contains('hidden')) nextQ();
+});
+
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
+function showResults() {
+  const pct = Math.round((score / deck.length) * 100);
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('q-counter').textContent = 'Complete';
+
+  let gradeLabel, gradeStyle, msg;
+  if (pct >= 90) { gradeLabel = 'A'; gradeStyle = 'bg-turf-50 text-turf-700 border-turf-300'; msg = "Outstanding. You're almost a good as Mitch, The Intern in Buda, and you are ready to handle any customer question on the floor."; }
+  else if (pct >= 75) { gradeLabel = 'B'; gradeStyle = 'bg-blue-50 text-blue-700 border-blue-200'; msg = "Strong product knowledge. Review a few specifics and you're set."; }
+  else if (pct >= 60) { gradeLabel = 'C'; gradeStyle = 'bg-amber-50 text-amber-700 border-amber-200'; msg = "Good foundation. Focus on pricing differences and accessory costs."; }
+  else { gradeLabel = 'D'; gradeStyle = 'bg-red-50 text-red-700 border-red-200'; msg = "Keep practicing — review brand differentiators, rental tiers, and add-on pricing."; }
+
+  const breakdownCards = Object.entries(tally).map(([brand, [right, wrong]]) => {
+    const total = right + wrong;
+    if (!total) return '';
+    const bpct = Math.round((right / total) * 100);
+    const bm = brandMeta[brand] || brandMeta["All Brands"];
+    return `
+      <div class="flex flex-col gap-1 p-3 rounded-xl border ${bm.border} ${bm.bg}">
+        <span class="text-xs font-semibold ${bm.text}">${brand}</span>
+        <span class="text-xl font-bold text-slate-800">${right}<span class="text-sm font-normal text-slate-400">/${total}</span></span>
+        <div class="w-full bg-white rounded-full h-1.5 overflow-hidden">
+          <div class="h-1.5 rounded-full bg-current ${bm.text} opacity-60" style="width:${bpct}%"></div>
+        </div>
+        <span class="text-xs text-slate-500">${bpct}%</span>
+      </div>`;
+  }).join('');
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div class="results-wrap text-center py-4">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl border-2 ${gradeStyle} mb-4">
+        <span class="font-display text-3xl font-bold">${gradeLabel}</span>
+      </div>
+      <div class="text-4xl font-display font-bold text-slate-900 mb-1">${score}<span class="text-xl font-normal text-slate-400"> / ${deck.length}</span></div>
+      <div class="text-2xl font-semibold text-slate-500 mb-3">${pct}%</div>
+      <p class="text-sm text-slate-500 max-w-sm mx-auto mb-8 leading-relaxed">${msg}</p>
+
+      <div class="text-left mb-6">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Breakdown by brand</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${breakdownCards}</div>
+      </div>
+
+      <button
+        onclick="init(true)"
+        class="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-700 text-white text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400"
+      >Retake with new order</button>
+    </div>
+  `;
+  document.getElementById('enter-hint').style.display = 'none';
+}
+
+// ─── KICK OFF ─────────────────────────────────────────────────────────────────
+init(true);
+</script>
+</body>
+</html>
