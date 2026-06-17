@@ -6,3 +6,5 @@ I prompted the tool to correct errors, standardize formats, and other niche deta
 after building this out I then prompted AI to assist in allowing access to the quiz on smartphone platforms. Creating a interface that was easily
 ready to use on both laptops and smartphone devices. After all of this was completed I troubleshooted the quiz app myself running through it 
 and examing the java code to ensure that all functions were working as intended.
+
+Use https://mitchelbrooks-bepbop.github.io/mission-golf-quiz/ to do the quiz in your browser
